@@ -9,6 +9,7 @@ import org.apache.commons.io.FileUtils;
 public class LocalStorage extends Storage{
 
     private MyFile storageRoot;
+    private boolean forGit = true;
 
     /**
      * Ispisivanje poruke za gresku
