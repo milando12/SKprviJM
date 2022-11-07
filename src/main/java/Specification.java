@@ -7,6 +7,7 @@ public abstract class Specification implements Serializable {
      * Starting to work with already existing storage.
      * @param path of the storage root directory.
      */
+    //kaci se na direktorijum koji vec postoji
     public abstract void takeStorage(Path path);
 
     /**
@@ -14,6 +15,7 @@ public abstract class Specification implements Serializable {
      * @param path where the storage root directory lies.
      * @param name of storgae root directory.
      */
+    //kreiramo nas direktorijum koji ce nam biti storage
     public abstract void startStorage(Path path, String name);
 
     /**
@@ -21,10 +23,11 @@ public abstract class Specification implements Serializable {
      * @param path where the storage root directory lies.
      * @param name of storgae root directory.
      * @param size of storage in bytes.
-     * @param fileCount number of files.
+     * @param fileCount number of allowed files.
      * @param forbidenExtensions file extensions that are prohibited in this storge.
      */
-    public abstract void startStorage(Path path, String name, Byte size
+    //kreiramo nas direktorijum koji ce nam biti storage ali sa ogranicenjima
+    public abstract void startStorageLmtd(Path path, String name, Byte size
             , Integer fileCount, String... forbidenExtensions);
 
     /**
@@ -57,21 +60,20 @@ public abstract class Specification implements Serializable {
     public abstract boolean createDirLmtd(String path, String name, Integer fileLimit);
 
     /**
-     * Moving directory into storage
-     * @param where Where in storage the directory/s from outside are going to be placed
-     * @param paths Absolute paths of directory/s which are being placed into storage
-     * @return
-     */
-    //iz spoljasnjeg dela u Storage
-    public abstract boolean moveInside(String where, String... paths);
-
-    /**
      * Deleting file od directory
-     * @param path Path in storage
-     * @param name Name in Storage of file or directory want
+     * @param path Path to file we want ot delete
      */
     //brisanje fajlova
-    public abstract void delete(String path, String name);
+    public abstract void delete(String path);
+
+    /**
+     * Renameing of file or directory
+     * @param path path to file/directory we want to rename relative to root
+     * @param newName name to be updated
+     * @return if renaming was successful
+     */
+    //preimenovanje fajla ili direktorijuma
+    public abstract boolean rename(String path, String newName);
 
     /**
      * Moving file from one to another directory inside Storage
@@ -82,21 +84,21 @@ public abstract class Specification implements Serializable {
     public abstract void moveFile(String source, String destination);
 
     /**
+     * Moving directory into storage
+     * @param where Where in storage the directory/s from outside are going to be placed
+     * @param paths Absolute paths of directory/s which are being placed into storage
+     * @return
+     */
+    //iz spoljasnjeg dela u Storage
+    public abstract boolean moveInside(String where, String... paths);
+
+    /**
      * Downloading a file or directory from storage.
      * @param sourcePath path of file or folder that we want to download
      * @param destinationPath absolute path in out file system where the element is going to be placed
      */
     //fajl se salje izvan skladista
     public abstract void moveOut(String sourcePath, String destinationPath);
-
-    /**
-     * Renameing of file or directory
-     * @param path path to file/directory we want to rename relative to root
-     * @param newName name to be updated
-     * @return if renaming was successful
-     */
-    //preimenovanje fajla ili direktorijuma
-    public abstract boolean rename(String path, String newName);
 
     ////////////////////////////////////////////PRETRAZIVANJE///////////////////////////////////////////////////////////
 
@@ -108,12 +110,11 @@ public abstract class Specification implements Serializable {
     public abstract void subdirectoriesInfo(String directory);
 
     /**
-     * Returns files from all directories in a given directory.
+     * Gives all files from subdirectories.
      * @param path of directory.
      */
-    //ulazi u direktorijume i ispisuje fajlove
     //vrati sve fajlove iz svih direktorijuma u nekom direktorijumu
-    public abstract void getFilesFromSubdirectories(String path);
+    public abstract void getFilesFromAllSubdirectories(String path);
 
     /**
      * Gives list of all Files in Directory and his subdirectories
@@ -143,7 +144,7 @@ public abstract class Specification implements Serializable {
      * @return if directory contains given list of files
      */
     //vratiti da li određeni direktorijum sadrži fajl sa određenim imenom, ili više fajlova sa zadatom listom imena
-    public abstract boolean contains(String path , String... names);
+    public abstract boolean containsFiles(String path , String... names);
 
     /**
      * Returns the folder/s which contain fileName
@@ -162,7 +163,6 @@ public abstract class Specification implements Serializable {
     //obezbediti zadavanje različitih kriterijuma sortiranja, na primer po nazivu,
     //datumu kreiranje ili modifikacije, rastuće ili opadajuće,
     public abstract void sortDirectory(String path,Sort what,String ascdes);
-
 
     /**
      * Returns the list of files created/modified in given period
