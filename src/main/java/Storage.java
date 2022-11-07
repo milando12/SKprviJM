@@ -1,7 +1,7 @@
 import java.io.Serializable;
 import java.nio.file.Path;
 
-public abstract class Specification implements Serializable {
+public abstract class Storage implements Serializable {
 
     /**
      * Starting to work with already existing storage.
@@ -90,15 +90,15 @@ public abstract class Specification implements Serializable {
      * @return
      */
     //iz spoljasnjeg dela u Storage
-    public abstract boolean moveInside(String where, String... paths);
+    public abstract boolean moveInside(String where, Path... paths);
 
     /**
      * Downloading a file or directory from storage.
-     * @param sourcePath path of file or folder that we want to download
+     * @param sourcePath path of file or folder in Storage we want to download
      * @param destinationPath absolute path in out file system where the element is going to be placed
      */
     //fajl se salje izvan skladista
-    public abstract void moveOut(String sourcePath, String destinationPath);
+    public abstract void moveOut(String sourcePath, Path destinationPath);
 
     ////////////////////////////////////////////PRETRAZIVANJE///////////////////////////////////////////////////////////
 
@@ -147,12 +147,11 @@ public abstract class Specification implements Serializable {
     public abstract boolean containsFiles(String path , String... names);
 
     /**
-     * Returns the folder/s which contain fileName
+     * Gives name of directory where file whit that name is located
      * @param fileName name of File we want to search
-     * @return name of directory where wanted file lies
      */
     //vratiti u kom folderu se nalazi fajl sa određenim zadatim imenom
-    public abstract String locateFile(String fileName);
+    public abstract void locateFile(String fileName);
 
     /**
      * Sorts directory by given criterion
@@ -170,8 +169,8 @@ public abstract class Specification implements Serializable {
      * @param from Date from
      * @param to Date to
      */
-    //vrati fajlove koji su kreirani/modifikovani u nekom periodu, u nekom
-    //direktorijumu,
+    //vrati fajlove koji su kreirani/modifikovani u nekom periodu, u nekom direktorijumu
+    //lakse je da mi parsiramo datum nego da ga prosledjujemo
     public abstract void getFilesByPeriod(Sort what, String from, String to);
 
 }
