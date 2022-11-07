@@ -1,8 +1,5 @@
-import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Path;
-import java.util.Date;
-import java.util.List;
 
 public abstract class Specification implements Serializable {
 
@@ -10,7 +7,7 @@ public abstract class Specification implements Serializable {
      * Starting to work with already existing storage.
      * @param path of the storage root directory.
      */
-    public abstract void startStorage(Path path);
+    public abstract void takeStorage(Path path);
 
     /**
      * Creating new storage with defaul configuration.
@@ -36,39 +33,44 @@ public abstract class Specification implements Serializable {
      * @param name names of new directory/ies
      * @return returns true if it was successful
      */
+    //kreiranje direktorijuma na određenoj putanji u skladištu
     public abstract boolean createDir(String path, String... name);
 
     /**
      * Creating given number of directories
      * @param path where the new directories lies in storage
-     * @param name name on new directory
+     * @param name name of new directory
      * @param count how many new directories are going to be created- default value is 1
      * @return returns true if it was successful
      */
-    public abstract boolean createDir(String path, String name, int count);
+    //kreiranje odredjenog broja direktorijuma
+    public abstract boolean createDirs(String path, String name, int count);
 
     /**
-     * Creating given number of directories
+     * Creating directory with limits
      * @param path where the new directories lies in storage
      * @param name name on new directory
      * @param fileLimit maximum number of files that a directory can contain
      * @return returns true if it was successful
      */
-    public abstract boolean createDir(String path, String name, Integer fileLimit);
+    //kreiranje direktorijuma sa organicenjima
+    public abstract boolean createDirLmtd(String path, String name, Integer fileLimit);
 
     /**
      * Moving directory into storage
-     * @param paths Absolute paths of directory/s which are being placed into storage
      * @param where Where in storage the directory/s from outside are going to be placed
+     * @param paths Absolute paths of directory/s which are being placed into storage
      * @return
      */
-    public abstract boolean moveIn(String where, String... paths);
+    //iz spoljasnjeg dela u Storage
+    public abstract boolean moveInside(String where, String... paths);
 
     /**
      * Deleting file od directory
-     * @param name Name in Storage of file or directory want
      * @param path Path in storage
+     * @param name Name in Storage of file or directory want
      */
+    //brisanje fajlova
     public abstract void delete(String path, String name);
 
     /**
@@ -76,84 +78,100 @@ public abstract class Specification implements Serializable {
      * @param source path of file we want to move relative to root
      * @param destination path of directory where it is going to be placed
      */
+    //premestanje fajlova u okviru Storage-a
     public abstract void moveFile(String source, String destination);
-    //TODO promeni ako ne mogu ista imena
-    // uradjeno
 
     /**
-     * Downloading of file or folder from storage.
+     * Downloading a file or directory from storage.
      * @param sourcePath path of file or folder that we want to download
      * @param destinationPath absolute path in out file system where the element is going to be placed
      */
-    public abstract void downloadFile(String sourcePath, String destinationPath);
+    //fajl se salje izvan skladista
+    public abstract void moveOut(String sourcePath, String destinationPath);
 
     /**
      * Renameing of file or directory
      * @param path path to file/directory we want to rename relative to root
      * @param newName name to be updated
-     * @return
+     * @return if renaming was successful
      */
+    //preimenovanje fajla ili direktorijuma
     public abstract boolean rename(String path, String newName);
-    //TODO promeni ako ne mogu ista imena
 
-    //Pretrage
+    ////////////////////////////////////////////PRETRAZIVANJE///////////////////////////////////////////////////////////
 
     /**
-     * Gets info about directory.
-     * @param directory
-     * @return String containing names and info of all subdirectories of a given directory
+     * Gives info about files in given directory
+     * @param directory directory we want to list
      */
-    public abstract String subdirectoriesInfo(String directory);
+    //vratiti sve fajlove u zadatom direktorijumu (vraća se naziv i metapodaci)
+    public abstract void subdirectoriesInfo(String directory);
 
     /**
      * Returns files from all directories in a given directory.
      * @param path of directory.
-     * @return list of files on depth of one.
      */
-    public abstract List<File>  getFilesJM(String path);
+    //ulazi u direktorijume i ispisuje fajlove
+    //vrati sve fajlove iz svih direktorijuma u nekom direktorijumu
+    public abstract void getFilesFromSubdirectories(String path);
 
     /**
-     * Returns the List of all Files under given directory
+     * Gives list of all Files in Directory and his subdirectories
      * @param path of directory.
-     * @return List of all Files under given directory.
      */
-    public abstract List<File> getFiles(String path);
+    //vrati sve fajlove u zadatom direktorijumu i svim poddirektorijumima
+    public abstract void getAllFilesFromDirectory(String path);
 
     /**
-     * Returns all files from the storage with a given extension.
-     * @param extension
-     * @return files from the storage with a given extension.
+     * Gives list of all files with specified extension
+     * @param extension extension of wanted files
      */
-    public abstract List<File> getFilesByExtension(String extension);
+    //vrati fajlove sa određenom ekstenzijom,
+    public abstract void getFilesByExtension(String extension);
 
     /**
-     * Returns files that contain a substring.
-     * @param substring
-     * @return
+     * Gives list of all files with specified substring
+     * @param substring word that file must contain
      */
-    public abstract List<File> getFilesBySubstring(String substring);
+    //vrati fajlove koji u svom imenu sadrže, počinju, ili se završavaju nekim zadatim podstringom
+    public abstract void getFilesBySubstring(String substring);
 
     /**
      * Returns true if directory contains all files.
      * @param path of directory
      * @param names of files
-     * @return
+     * @return if directory contains given list of files
      */
+    //vratiti da li određeni direktorijum sadrži fajl sa određenim imenom, ili više fajlova sa zadatom listom imena
     public abstract boolean contains(String path , String... names);
 
     /**
      * Returns the folder/s which contain fileName
-     * @param fileName
-     * @return
+     * @param fileName name of File we want to search
+     * @return name of directory where wanted file lies
      */
+    //vratiti u kom folderu se nalazi fajl sa određenim zadatim imenom
     public abstract String locateFile(String fileName);
 
     /**
-     * Returns the list of files created/modified in period between start and end.
-     * @param start
-     * @param end
-     * @return
+     * Sorts directory by given criterion
+     * @param path Path to directory in Storage
+     * @param what criterion
+     * @param ascdes order
      */
-    public abstract List<File> getFilesByPeriod(Date start, Date end);
+    //obezbediti zadavanje različitih kriterijuma sortiranja, na primer po nazivu,
+    //datumu kreiranje ili modifikacije, rastuće ili opadajuće,
+    public abstract void sortDirectory(String path,Sort what,String ascdes);
+
+
+    /**
+     * Returns the list of files created/modified in given period
+     * @param what type to sort
+     * @param from Date from
+     * @param to Date to
+     */
+    //vrati fajlove koji su kreirani/modifikovani u nekom periodu, u nekom
+    //direktorijumu,
+    public abstract void getFilesByPeriod(Sort what, String from, String to);
 
 }
