@@ -29,7 +29,7 @@ public abstract class Storage implements Serializable {
      * @param forbidenExtensions file extensions that are prohibited in this storge.
      */
     //kreiramo nas direktorijum koji ce nam biti storage ali sa ogranicenjima
-    public abstract void startStorageLmtd(Path path, String name, Byte size
+    public abstract void startStorage(Path path, String name, Byte size
             , Integer fileCount, String... forbidenExtensions);
 
     /**
