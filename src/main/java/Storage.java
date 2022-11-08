@@ -1,5 +1,7 @@
+import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Path;
+import java.util.List;
 
 public abstract class Storage implements Serializable {
 
@@ -8,7 +10,7 @@ public abstract class Storage implements Serializable {
      * @param path of the storage root directory.
      */
     //kaci se na direktorijum koji vec postoji
-    public abstract void takeStorage(Path path);
+    public abstract void startStorage(Path path);
 
     /**
      * Creating new storage with defaul configuration.
@@ -47,7 +49,7 @@ public abstract class Storage implements Serializable {
      * @return returns true if it was successful
      */
     //kreiranje odredjenog broja direktorijuma
-    public abstract boolean createDirs(String path, String name, int count);
+    public abstract boolean createDir(String path, String name, int count);
 
     /**
      * Creating directory with limits
@@ -57,7 +59,7 @@ public abstract class Storage implements Serializable {
      * @return returns true if it was successful
      */
     //kreiranje direktorijuma sa organicenjima
-    public abstract boolean createDirLmtd(String path, String name, Integer fileLimit);
+    public abstract boolean createDir(String path, String name, Integer fileLimit);
 
     /**
      * Deleting file od directory
@@ -107,35 +109,35 @@ public abstract class Storage implements Serializable {
      * @param directory directory we want to list
      */
     //vratiti sve fajlove u zadatom direktorijumu (vraća se naziv i metapodaci)
-    public abstract void subdirectoriesInfo(String directory);
+    public abstract String subdirectoriesInfo(String directory);
 
     /**
      * Gives all files from subdirectories.
      * @param path of directory.
      */
     //vrati sve fajlove iz svih direktorijuma u nekom direktorijumu
-    public abstract void getFilesFromAllSubdirectories(String path);
+    public abstract List<File> getFilesFromAllSubdirectories(String path);
 
     /**
      * Gives list of all Files in Directory and his subdirectories
      * @param path of directory.
      */
     //vrati sve fajlove u zadatom direktorijumu i svim poddirektorijumima
-    public abstract void getAllFilesFromDirectory(String path);
+    public abstract List<File> getAllFilesFromDirectory(String path);
 
     /**
      * Gives list of all files with specified extension
      * @param extension extension of wanted files
      */
     //vrati fajlove sa određenom ekstenzijom,
-    public abstract void getFilesByExtension(String extension);
+    public abstract List<File> getFilesByExtension(String extension);
 
     /**
      * Gives list of all files with specified substring
      * @param substring word that file must contain
      */
     //vrati fajlove koji u svom imenu sadrže, počinju, ili se završavaju nekim zadatim podstringom
-    public abstract void getFilesBySubstring(String substring);
+    public abstract List<File> getFilesBySubstring(String substring);
 
     /**
      * Returns true if directory contains all files.
@@ -151,7 +153,7 @@ public abstract class Storage implements Serializable {
      * @param fileName name of File we want to search
      */
     //vratiti u kom folderu se nalazi fajl sa određenim zadatim imenom
-    public abstract void locateFile(String fileName);
+    public abstract String locateFile(String fileName);
 
     /**
      * Sorts directory by given criterion
@@ -171,6 +173,6 @@ public abstract class Storage implements Serializable {
      */
     //vrati fajlove koji su kreirani/modifikovani u nekom periodu, u nekom direktorijumu
     //lakse je da mi parsiramo datum nego da ga prosledjujemo
-    public abstract void getFilesByPeriod(Sort what, String from, String to);
+    public abstract List<File> getFilesByPeriod(Sort what, String from, String to);
 
 }
