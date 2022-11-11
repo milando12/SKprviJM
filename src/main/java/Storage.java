@@ -109,35 +109,35 @@ public abstract class Storage implements Serializable {
      * @param directory directory we want to list
      */
     //vratiti sve fajlove u zadatom direktorijumu (vraća se naziv i metapodaci)
-    public abstract String subdirectoriesInfo(String directory);
+    public abstract List<FileJM> subdirectoriesInfo(String directory);
 
     /**
      * Gives all files from subdirectories.
      * @param path of directory.
      */
     //vrati sve fajlove iz svih direktorijuma u nekom direktorijumu
-    public abstract List<File> getFilesFromAllSubdirectories(String path);
+    public abstract List<FileJM> getFilesFromAllSubdirectories(String path);
 
     /**
      * Gives list of all Files in Directory and his subdirectories
      * @param path of directory.
      */
     //vrati sve fajlove u zadatom direktorijumu i svim poddirektorijumima
-    public abstract List<File> getAllFilesFromDirectory(String path);
+    public abstract List<FileJM> getAllFilesFromDirectory(String path);
 
     /**
      * Gives list of all files with specified extension
      * @param extension extension of wanted files
      */
     //vrati fajlove sa određenom ekstenzijom,
-    public abstract List<File> getFilesByExtension(String extension);
+    public abstract List<FileJM> getFilesByExtension(String extension);
 
     /**
      * Gives list of all files with specified substring
      * @param substring word that file must contain
      */
     //vrati fajlove koji u svom imenu sadrže, počinju, ili se završavaju nekim zadatim podstringom
-    public abstract List<File> getFilesBySubstring(String substring);
+    public abstract List<FileJM> getFilesBySubstring(String substring);
 
     /**
      * Returns true if directory contains all files.
@@ -153,7 +153,7 @@ public abstract class Storage implements Serializable {
      * @param fileName name of File we want to search
      */
     //vratiti u kom folderu se nalazi fajl sa određenim zadatim imenom
-    public abstract String locateFile(String fileName);
+    public abstract FileJM locateFile(String fileName);
 
     /**
      * Sorts directory by given criterion
@@ -173,6 +173,6 @@ public abstract class Storage implements Serializable {
      */
     //vrati fajlove koji su kreirani/modifikovani u nekom periodu, u nekom direktorijumu
     //lakse je da mi parsiramo datum nego da ga prosledjujemo
-    public abstract List<File> getFilesByPeriod(Sort what, String from, String to);
+    public abstract List<FileJM> getFilesByPeriod(Sort what, String from, String to);
 
 }
