@@ -86,13 +86,13 @@ public abstract class Storage implements Serializable {
     public abstract void moveFile(String source, String destination);
 
     /**
-     * Moving directory into storage
+     * Moving file into storage
      * @param where Where in storage the directory/s from outside are going to be placed
      * @param paths Absolute paths of directory/s which are being placed into storage
      * @return
      */
     //iz spoljasnjeg dela u Storage
-    public abstract boolean moveInside(String where, Path... paths);
+    public abstract boolean moveInside(String where, String fileType, Path... paths);
 
     /**
      * Downloading a file or directory from storage.
@@ -153,7 +153,7 @@ public abstract class Storage implements Serializable {
      * @param fileName name of File we want to search
      */
     //vratiti u kom folderu se nalazi fajl sa određenim zadatim imenom
-    public abstract FileJM locateFile(String fileName);
+    public abstract String locateFile(String fileName);
 
     /**
      * Sorts directory by given criterion

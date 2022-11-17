@@ -1,12 +1,21 @@
-import java.util.Date;
-
 public class FileJM {
     String name;
     String path;
-    Date creationTime;
-    Date modificationTime;
+    String creationTime;
+    String modificationTime;
     Integer size;
     boolean isDirectory;
+
+    public FileJM(String name, String path, String creationTime, String modificationTime, Integer size, boolean isDirectory) {
+        this.name = name;
+        this.path = path;
+        this.creationTime = creationTime;
+        this.modificationTime = modificationTime;
+        this.size = size;
+        this.isDirectory = isDirectory;
+    }
+
+    public FileJM(){};
 
     public String getName() {
         return name;
@@ -24,19 +33,19 @@ public class FileJM {
         this.path = path;
     }
 
-    public Date getCreationTime() {
+    public String getCreationTime() {
         return creationTime;
     }
 
-    public void setCreationTime(Date creationTime) {
+    public void setCreationTime(String creationTime) {
         this.creationTime = creationTime;
     }
 
-    public Date getModificationTime() {
+    public String getModificationTime() {
         return modificationTime;
     }
 
-    public void setModificationTime(Date modificationTime) {
+    public void setModificationTime(String modificationTime) {
         this.modificationTime = modificationTime;
     }
 
@@ -54,5 +63,17 @@ public class FileJM {
 
     public void setDirectory(boolean directory) {
         isDirectory = directory;
+    }
+
+    @Override
+    public String toString() {
+        return "FileJM{" +
+                "name='" + name + '\'' +
+                ", path='" + path + '\'' +
+                ", creationTime='" + creationTime + '\'' +
+                ", modificationTime='" + modificationTime + '\'' +
+                ", size=" + size +
+                ", isDirectory=" + isDirectory +
+                '}';
     }
 }
