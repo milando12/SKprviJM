@@ -153,7 +153,7 @@ public abstract class Storage implements Serializable {
      * @param fileName name of File we want to search
      */
     //vratiti u kom folderu se nalazi fajl sa određenim zadatim imenom
-    public abstract String locateFile(String fileName);
+    public abstract List<String> locateFile(String fileName);
 
     /**
      * Sorts directory by given criterion
