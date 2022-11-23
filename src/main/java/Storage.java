@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.Serializable;
+import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -10,7 +11,7 @@ public abstract class Storage implements Serializable {
      * @param path of the storage root directory.
      */
     //kaci se na direktorijum koji vec postoji
-    public abstract void startStorage(Path path);
+    public abstract void startStorage(String path);
 
     /**
      * Creating new storage with defaul configuration.
@@ -18,19 +19,18 @@ public abstract class Storage implements Serializable {
      * @param name of storgae root directory.
      */
     //kreiramo nas direktorijum koji ce nam biti storage
-    public abstract void startStorage(Path path, String name);
+    public abstract void startStorage(String path, String name);
 
     /**
      * Creating new storage with custom configuration.
      * @param path where the storage root directory lies.
      * @param name of storgae root directory.
      * @param size of storage in bytes.
-     * @param fileCount number of allowed files.
      * @param forbidenExtensions file extensions that are prohibited in this storge.
      */
     //kreiramo nas direktorijum koji ce nam biti storage ali sa ogranicenjima
-    public abstract void startStorage(Path path, String name, Byte size
-            , Integer fileCount, String... forbidenExtensions);
+    public abstract void startStorage(String path, String name, long size
+            , String... forbidenExtensions);
 
     /**
      * Creating new directories on given path
