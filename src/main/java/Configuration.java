@@ -61,6 +61,13 @@ public class Configuration {
         else currFileLimits.put(parentPath, 1);
     }
 
+    public void decCurrFileLimit(String parentPath){
+        if (currFileLimits== null) return;
+
+        if (currFileLimits.containsKey(parentPath))
+            currFileLimits.computeIfPresent(parentPath, (k, v) -> v - 1);
+    }
+
     public List<String> getExtensions() {
         return extensions;
     }
