@@ -4,6 +4,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
 import org.apache.commons.io.FileUtils;
 
 public class LocalStorage extends Storage{
@@ -103,10 +109,15 @@ public class LocalStorage extends Storage{
     }
 
     @Override
-    public void takeStorage(Path path) {
-        File root = new File(String.valueOf(path));
+    public void startStorage(String path) {
+        File root = new File(String.valueOf(Paths.get(path)));
 
         if (root.exists()){
+            try {
+                FileUtils.cleanDirectory(root);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
             this.storageRoot = new MyFile(root.getName(),null,root,true);
             System.out.println("SysInfo: Direktorijum " + storageRoot.getName() + " je uspesno preuzet");
         }else {
@@ -115,8 +126,8 @@ public class LocalStorage extends Storage{
     }
 
     @Override
-    public void startStorage(Path path, String name) {
-        File root = new File(String.valueOf(path),name);        //pravimo folder
+    public void startStorage(String path, String name) {
+        File root = new File(String.valueOf(Paths.get(path)),name);        //pravimo folder
 
         if(root.mkdir()){
             this.storageRoot = new MyFile(name,null,root,true);     //odmah pravimo objekat nase klase
@@ -127,7 +138,7 @@ public class LocalStorage extends Storage{
 
     //TODO
     @Override
-    public void startStorageLmtd(Path path, String s, Byte aByte, Integer integer, String... strings) {
+    public void startStorage(String path, String name, long size, String... forbidenExtensions){
 
     }
 
@@ -157,7 +168,7 @@ public class LocalStorage extends Storage{
     }
 
     @Override
-    public boolean createDirs(String path, String universalName, int i) {
+    public boolean createDir(String path, String universalName, int i) {
         MyFile currentDirectory = pathToMyFile(path);
 
         if(universalName.contains(".")){
@@ -169,7 +180,8 @@ public class LocalStorage extends Storage{
                     if (newFile.mkdir()){
                         MyFile myFile = new MyFile(name,currentDirectory,newFile,false);
                     }else {
-                        errorMessage("createDirs");
+                        errorMessage("createDir");
+                        return false;
                     }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -184,6 +196,7 @@ public class LocalStorage extends Storage{
                     FileUtils.touch(newDirectory);
                     if (newDirectory.mkdir()) {
                         MyFile myFile = new MyFile(name,currentDirectory,newDirectory,true);
+                        return true;
                     } else {
                         errorMessage("createDirs");
                         return false;
@@ -197,7 +210,7 @@ public class LocalStorage extends Storage{
     }
 
     @Override
-    public boolean createDirLmtd(String path, String name, Integer fileLimit){
+    public boolean createDir(String path, String name, Integer fileLimit){
         return false;
     }
 
@@ -255,7 +268,7 @@ public class LocalStorage extends Storage{
     }
 
     @Override
-    public boolean moveInside(String where, Path... paths) {
+    public boolean moveInside(String where, String fileType,Path... paths) {
         MyFile currentDirectory = pathToMyFile(where);
 
         for (Path putanja : paths){
@@ -311,7 +324,7 @@ public class LocalStorage extends Storage{
     }
 
     @Override
-    public void subdirectoriesInfo(String path) {
+    public List<FileJM> subdirectoriesInfo(String path) {
         MyFile currentDirectory = pathToMyFile(path);
 
         System.out.println("Ispis podataka o deci:");
@@ -335,12 +348,13 @@ public class LocalStorage extends Storage{
                 }
             }
         }else {
-            errorMessage("subdirectoriesInfo");
+            errorMessage("subdirectoriesInfo_WrongDirectory");
         }
+        return null;
     }
 
     @Override
-    public void getFilesFromAllSubdirectories(String putanja) {
+    public List<FileJM> getFilesFromAllSubdirectories(String putanja) {
         MyFile pointerMyFile = pathToMyFile(putanja);
 
         if(pointerMyFile.isDirectory()){
@@ -348,13 +362,14 @@ public class LocalStorage extends Storage{
                 fileSearch(childToList,null,"getFilesJM");
             }
         }else {
-            errorMessage("getFilesJM");
+            errorMessage("getFilesJM_WrongDirectory");
         }
+        return null;
     }
 
     //treba da vrati fajlove i iz zadatog direktorijuma  easy:)
     @Override
-    public void getAllFilesFromDirectory(String putanja) {
+    public List<FileJM> getAllFilesFromDirectory(String putanja) {
         MyFile pointerMyFile = pathToMyFile(putanja);
 
         if (pointerMyFile.isDirectory()){
@@ -362,27 +377,30 @@ public class LocalStorage extends Storage{
         }else {
             errorMessage("getFiles");
         }
+        return null;
     }
 
     @Override   //najbolje bi bilo da se ukuca sa tackom .exe .txt
-    public void getFilesByExtension(String extension) {
+    public List<FileJM> getFilesByExtension(String extension) {
         fileSearch(storageRoot,extension,"getFilesByExtension");
+        return null;
     }
 
     @Override
-    public void getFilesBySubstring(String substring) {
+    public List<FileJM> getFilesBySubstring(String substring) {
         fileSearch(storageRoot,substring,"getFilesBySubstring");
+        return null;
     }
 
     @Override
-    public boolean containsFiles(String putanja, String... strings) {
+    public boolean containsFiles(String putanja, String... names) {
         MyFile fileToCheck = pathToMyFile(putanja);
         int count = 0;
 
         if (fileToCheck.isDirectory()){
             for (MyFile detence : fileToCheck.getChildrenList()){
                 if (!(detence.isDirectory())){
-                    for (String trazenoIme : strings){
+                    for (String trazenoIme : names){
                         if(detence.getName().equals(trazenoIme)){
                             System.out.println(detence.getName());
                             count++;
@@ -403,22 +421,65 @@ public class LocalStorage extends Storage{
     }
 
     @Override
-    public void locateFile(String fileToFind) {
+    public List<String> locateFile(String fileToFind) {
         fileSearch(storageRoot,fileToFind,"locateFile");
+        return null;
     }
 
     //obezbediti zadavanje različitih kriterijuma sortiranja, na primer po nazivu,
     //datumu kreiranje ili modifikacije, rastuće ili opadajuće,
     //TODO
     @Override
-    public void sortDirectory(String s, Sort sort, String s1) {
-
+    public void sortDirectory(String path, Sort sort, String s1) {
+        MyFile pointerMyFile = pathToMyFile(path);
     }
 
-    //TODO
+    //treba da vrati fajlove iz direktorijuma za neki period
     @Override
-    public void getFilesByPeriod(Sort what, String from, String to) {
+    public List<FileJM> getFilesByPeriod(String path, String from, String to) {
+        List <FileJM> listToReturn = new ArrayList<>();
+        MyFile pointerMyFile = pathToMyFile(path);      //direktorijum koji proveravamo
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yy HH:mm");  //date format
+        Date dateFrom;
+        Date dateTo;
 
+        try {
+            dateFrom = sdf.parse(from);
+            dateTo = sdf.parse(to);
+        } catch (ParseException e) {
+            errorMessage("getFilesByPeriod_DataParsing");
+            return null;
+        }
+
+        System.out.println("Ispis imena fajlova za period od: " + sdf.format(dateFrom) + " do: " + sdf.format(dateTo));
+        for (MyFile fileKid : pointerMyFile.getChildrenList()){
+            try {
+                BasicFileAttributes atr = Files.readAttributes(Paths.get(fileKid.getFile().getPath()),BasicFileAttributes.class);
+                Date fileCreationTime = new Date(atr.creationTime().toMillis());
+                Date fileModificationTime = new Date(atr.lastModifiedTime().toMillis());
+
+                if(fileCreationTime.compareTo(dateFrom) >= 0 && fileCreationTime.compareTo(dateTo) <= 0){
+                    System.out.println(fileKid.getName());
+                    //String name, String path, String creationTime, String modificationTime, Integer size, boolean isDirectory
+                    FileJM file = new FileJM(fileKid.getName(),fileKid.getFile().getPath(),null,null,0,fileKid.isDirectory());
+                    listToReturn.add(file);
+                    continue;
+                }
+
+                if (fileModificationTime.compareTo(dateFrom) >= 0 && fileModificationTime.compareTo(dateTo) <= 0){
+                    System.out.println(fileKid.getName());
+                    //String name, String path, String creationTime, String modificationTime, Integer size, boolean isDirectory
+                    FileJM file = new FileJM(fileKid.getName(),fileKid.getFile().getPath(),null,null,0,fileKid.isDirectory());
+                    listToReturn.add(file);
+                }
+
+            } catch (IOException e) {
+                errorMessage("getFilesByPeriod_BasicFileAtrError");
+                return null;
+            }
+        }
+
+        return listToReturn;
     }
 
 }
