@@ -162,7 +162,7 @@ public abstract class Storage implements Serializable {
      */
     //obezbediti zadavanje različitih kriterijuma sortiranja, na primer po nazivu,
     //datumu kreiranje ili modifikacije, rastuće ili opadajuće,
-    public abstract List<FileJM> sortDirectory(List<FileJM> lista,Sort what,String ascdes);
+    public abstract List<FileJM> sortDirectory(List<FileJM> lista,Sort what,Sort ascdes);
 
     /**
      * Returns the list of files created/modified in given period
