@@ -4,5 +4,7 @@ public enum Sort {
     DATE_MODIFIED,
     PATH,
     SIZE,
-    IS_DIRECTORY
+    IS_DIRECTORY,
+    ASC,
+    DSC
 }

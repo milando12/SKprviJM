@@ -34,12 +34,14 @@ public class Configuration {
 
         if (currSize+fileSize> maxSize) return false;
 
+        if (!maxFileLimits.containsKey(parentDirectory)) return true;
         if (currFileLimits.get(parentDirectory)+1> maxFileLimits.get(parentDirectory)) return false;
 
         return true;
     }
 
     public boolean canAddDirectory(String parentDirectory){
+        if (!maxFileLimits.containsKey(parentDirectory)) return true;
         if (currFileLimits.get(parentDirectory)+1> maxFileLimits.get(parentDirectory)) return false;
 
         return true;

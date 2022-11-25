@@ -15,7 +15,7 @@ public class FileJM {
         this.isDirectory = isDirectory;
     }
 
-    public FileJM(){};
+    public FileJM(){}
 
     public String getName() {
         return name;
