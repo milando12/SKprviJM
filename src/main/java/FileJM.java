@@ -1,4 +1,7 @@
+import java.io.File;
+
 public class FileJM {
+
     String name;
     String path;
     String creationTime;
@@ -15,7 +18,10 @@ public class FileJM {
         this.isDirectory = isDirectory;
     }
 
-    public FileJM(){}
+    public FileJM(String name, String path){
+        this.name = name;
+        this.path = path;
+    }
 
     public String getName() {
         return name;

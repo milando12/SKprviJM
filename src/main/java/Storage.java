@@ -156,13 +156,13 @@ public abstract class Storage implements Serializable {
 
     /**
      * Sorts directory by given criterion
-     * @param path Path to directory in Storage
+     * @param lista Path to directory in Storage
      * @param what criterion
      * @param ascdes order
      */
     //obezbediti zadavanje različitih kriterijuma sortiranja, na primer po nazivu,
     //datumu kreiranje ili modifikacije, rastuće ili opadajuće,
-    public abstract void sortDirectory(String path,Sort what,String ascdes);
+    public abstract List<FileJM> sortDirectory(List<FileJM> lista,Sort what,String ascdes);
 
     /**
      * Returns the list of files created/modified in given period
