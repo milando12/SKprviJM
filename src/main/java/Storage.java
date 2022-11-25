@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.math.BigInteger;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 public abstract class Storage implements Serializable {
@@ -174,5 +175,40 @@ public abstract class Storage implements Serializable {
     //vrati fajlove koji su kreirani/modifikovani u nekom periodu, u nekom direktorijumu
     //lakse je da mi parsiramo datum nego da ga prosledjujemo
     public abstract List<FileJM> getFilesByPeriod(Sort what, String from, String to);
+
+    /**
+     * Provides an option to filter what is shown about the file.
+     * @param fileJMList is the list of files to filter.
+     * @param sort represents which fields are going to be shown.
+     * @return filterd list in string format. Each string is a description of one file.
+     */
+    public List<String> fileFilter(List<FileJM> fileJMList, List<Sort> sort){
+        List<String> output= new ArrayList<>();
+
+
+        StringBuilder stringBuilder;
+        for (FileJM file:fileJMList) {
+            stringBuilder= new StringBuilder();
+            if (sort.contains(Sort.NAME)){
+                stringBuilder.append("File name:\t"+ file.getName()+'\n');
+            }else if (sort.contains(Sort.SIZE)){
+                stringBuilder.append("File size:\t"+ file.getSize()+'\n');
+            }else if (sort.contains(Sort.PATH)){
+                stringBuilder.append("File path relative to storage root:\t"+ file.getPath()+'\n');
+            }else if (sort.contains(Sort.IS_DIRECTORY)){
+                if (file.isDirectory) {
+                    stringBuilder.append("File type:\tfolder" + '\n');
+                }else stringBuilder.append("File type:\tfile" + '\n');
+            }else if (sort.contains(Sort.DATE_CREATED)){
+                stringBuilder.append("File creation time:\t"+ file.getCreationTime()+'\n');
+            }else if (sort.contains(Sort.DATE_MODIFIED)){
+                stringBuilder.append("File modification time:\t"+ file.getModificationTime()+'\n');
+            }
+
+            output.add(stringBuilder.toString());
+        }
+
+        return output;
+    }
 
 }
