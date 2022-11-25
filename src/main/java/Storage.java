@@ -1,6 +1,4 @@
-import java.io.File;
 import java.io.Serializable;
-import java.math.BigInteger;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -168,13 +166,13 @@ public abstract class Storage implements Serializable {
 
     /**
      * Returns the list of files created/modified in given period
-     * @param what type to sort
+     * @param path route to directory
      * @param from Date from
      * @param to Date to
      */
     //vrati fajlove koji su kreirani/modifikovani u nekom periodu, u nekom direktorijumu
     //lakse je da mi parsiramo datum nego da ga prosledjujemo
-    public abstract List<FileJM> getFilesByPeriod(Sort what, String from, String to);
+    public abstract List<FileJM> getFilesByPeriod(String path, String from, String to);
 
     /**
      * Provides an option to filter what is shown about the file.
