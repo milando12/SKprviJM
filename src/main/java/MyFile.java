@@ -9,6 +9,8 @@ public class MyFile {
     private File file;
     private boolean isDirectory;
     private List<MyFile> childrenList;
+    private boolean hasLimits = false;
+    private int limit;
 
     public MyFile(String name, MyFile parent, File file, boolean isDirectory) {
         this.name = name;
@@ -60,6 +62,13 @@ public class MyFile {
         }
     }
 
+    public boolean checkLimits(){
+        if (this.getChildrenList().size()+1 <= limit){
+            return true;
+        }
+        return false;
+    }
+
     public String getName() {
         return name;
     }
@@ -97,4 +106,19 @@ public class MyFile {
         return childrenList;
     }
 
+    public boolean isHasLimits() {
+        return hasLimits;
+    }
+
+    public void setHasLimits(boolean hasLimits) {
+        this.hasLimits = hasLimits;
+    }
+
+    public int getLimit() {
+        return limit;
+    }
+
+    public void setLimit(int limit) {
+        this.limit = limit;
+    }
 }

@@ -1,4 +1,5 @@
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -6,39 +7,33 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import org.apache.commons.io.FileUtils;
 
 import static org.apache.commons.io.comparator.LastModifiedFileComparator.LASTMODIFIED_COMPARATOR;
+import static org.apache.commons.io.comparator.LastModifiedFileComparator.LASTMODIFIED_REVERSE;
 import static org.apache.commons.io.comparator.NameFileComparator.NAME_COMPARATOR;
+import static org.apache.commons.io.comparator.NameFileComparator.NAME_REVERSE;
 import static org.apache.commons.io.comparator.SizeFileComparator.SIZE_COMPARATOR;
+import static org.apache.commons.io.comparator.SizeFileComparator.SIZE_REVERSE;
 
 public class LocalStorage extends Storage{
 
     private MyFile storageRoot;
     private List<FileJM> filesJM;
+    private ConfigurationJM config;
+    private List<String> forbidden;
 
     private void errorMessage(String function){
         System.err.println("Greska u: " + function);
     }
 
-    /**
-     * Za prosledjenu putanju vraca fajl na toj putanji u obliku MyFile
-     */
     private MyFile pathToMyFile(String path){
         String pool[] = path.split(":");
         if(pool.length == 1 && pool[0].equals(storageRoot.getName())){
             return storageRoot;
         }
-
-//        if(!(pool[0].equals(storageRoot.getName()))){   //ako nije dobro imenovan root
-//            errorMessage("pathToMyFile");
-//            return null;
-//        }
 
         MyFile pointer = storageRoot;
         for (int i = 1; i < pool.length; i++){
@@ -46,15 +41,11 @@ public class LocalStorage extends Storage{
                 pointer = pointer.findChildByName(pool[i]);
             }else {
                 errorMessage("pathToMyFile");
-//                return null;
             }
         }
         return pointer;
     }
 
-    /**
-     * Pronalazi i ispisuje fajlove na osnovu toga koja funkcija je poziva
-     */
     private void fileSearch(MyFile directory, String checker, String function){
         if(directory.getChildrenList().size() == 0){
             return;
@@ -111,7 +102,6 @@ public class LocalStorage extends Storage{
 
     }
 
-
     @Override
     public void startStorage(String path) {
         File root = new File(String.valueOf(Paths.get(path)));
@@ -141,31 +131,85 @@ public class LocalStorage extends Storage{
     //TODO
     @Override
     public void startStorage(String path, String name, long size, String... forbidenExtensions){
-        this.filesJM = new ArrayList<>();
+        File root = new File(String.valueOf(Paths.get(path)),name);        //pravimo folder
+
+        if(root.mkdir()){
+            this.storageRoot = new MyFile(name,null,root,true);     //odmah pravimo objekat nase klase
+            this.filesJM = new ArrayList<>();
+            System.out.println("SysInfo: Direktorijum " + storageRoot.getName() + " je uspesno kreiran");
+        }else
+            errorMessage("startStorage");
+
+        List<String> extensions = new ArrayList<>();
+        for (String str : forbidenExtensions){
+            extensions.add(str);
+            forbidden.add(str);
+        }
+
+        this.config = new ConfigurationJM(extensions,size);
+        File configFile = new File(storageRoot.getFile().getPath(),"config.txt");
+        try {
+            FileWriter fw = new FileWriter(configFile);
+            fw.write("forbidenExtensions: ");
+            for (String str : extensions){
+                fw.write(str);
+                fw.write(" ");
+            }
+            fw.write('\n');
+            fw.write("size: ");
+            fw.write(String.valueOf(size));
+            fw.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
     @Override
-    public boolean createDir(String path, String... names) {
+    public boolean createDir(String path, String names) {
         MyFile currentDirectory = pathToMyFile(path);
 
-        for (String newOne : names){
-            if(newOne.contains(".")){
-                try {
-                    File newFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),newOne)));
-                    FileUtils.touch(newFile);
-                    MyFile myFile = new MyFile(newOne,currentDirectory,newFile,false);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
+        if (currentDirectory.isHasLimits()){
+            if(currentDirectory.checkLimits()){
+                if(names.contains(".")){
+                    try {
+                        File newFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),names)));
+                        FileUtils.touch(newFile);
+                        MyFile myFile = new MyFile(names,currentDirectory,newFile,false);
+                    } catch (IOException e) {
+                        errorMessage("createDir");
+                    }
+                }else {
+                    File newDirectory = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(), names)));
+                    if (newDirectory.mkdir()) {
+                        MyFile myFile = new MyFile(names, currentDirectory,  newDirectory, true);
+                    } else {
+                        errorMessage("createDir");
+                    }
                 }
             }else {
-                File newDirectory = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(), newOne)));
+                errorMessage("createDir_OverLimits");
+                return false;
+            }
+        }else {
+            if(names.contains(".")){
+                try {
+                    File newFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),names)));
+                    FileUtils.touch(newFile);
+                    MyFile myFile = new MyFile(names,currentDirectory,newFile,false);
+                } catch (IOException e) {
+                    errorMessage("createDir");
+                }
+            }else {
+                File newDirectory = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(), names)));
                 if (newDirectory.mkdir()) {
-                    MyFile myFile = new MyFile(newOne, currentDirectory,  newDirectory, true);
+                    MyFile myFile = new MyFile(names, currentDirectory,  newDirectory, true);
                 } else {
                     errorMessage("createDir");
                 }
             }
         }
+
         return false;
     }
 
@@ -177,58 +221,42 @@ public class LocalStorage extends Storage{
         return true;
     }
 
-//    @Override
-//    public boolean createDir(String path, String universalName, int i) {
-//        MyFile currentDirectory = pathToMyFile(path);
-//
-//        if(universalName.contains(".")){
-//            for(int count = 1; count <= i; count++){
-//                try {
-//                    String name = universalName.concat(String.valueOf(count));
-//                    File newFile = new File(currentDirectory.getFile(),name);
-//                    FileUtils.touch(newFile);
-//                    if (newFile.mkdir()){
-//                        MyFile myFile = new MyFile(name,currentDirectory,newFile,false);
-//                    }else {
-//                        errorMessage("createDirs");
-//                        return false;
-//                    }
-//                } catch (IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
-//
-//        }else {
-//            for(int count = 1; count <= i; count++){
-//                try {
-//                    String name = universalName.concat(String.valueOf(count));
-//
-//                    File newDirectory = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),name)));
-//                    FileUtils.touch(newDirectory);
-//                    if (newDirectory.mkdir()) {
-//                        MyFile myFile = new MyFile(name,currentDirectory,newDirectory,true);
-//                        return true;
-//                    } else {
-//                        errorMessage("createDirs");
-//                        return false;
-//                    }
-//                } catch (IOException e) {
-//                    throw new RuntimeException(e);
-//                }
-//            }
-//        }
-//        return false;
-//    }
-
     @Override
-    public boolean createDir(String path, String name, Integer fileLimit){
+    public boolean createDirLim(String path, String name, Integer fileLimit){
+        MyFile currentDirectory = pathToMyFile(path);
+        if (currentDirectory.isHasLimits()){
+            if(currentDirectory.checkLimits()){
+                File newDirectory = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(), name)));
+                if (newDirectory.mkdir()) {
+                    MyFile myFile = new MyFile(newDirectory.getName(), currentDirectory,  newDirectory, true);
+                    myFile.setLimit(fileLimit);
+                    myFile.setHasLimits(true);
+                } else {
+                    errorMessage("createDir");
+                }
+            }else {
+                errorMessage("createDir_OverLimits");
+                return false;
+            }
+
+        }else {
+            File newDirectory = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(), name)));
+            if (newDirectory.mkdir()) {
+                MyFile myFile = new MyFile(newDirectory.getName(), currentDirectory,  newDirectory, true);
+                myFile.setLimit(fileLimit);
+                myFile.setHasLimits(true);
+            } else {
+                errorMessage("createDirLmtd");
+            }
+        }
+
+
         return false;
     }
 
     @Override
     public void delete(String pathInStorage) {
         MyFile forDelete = pathToMyFile(pathInStorage);
-
         if(forDelete.getFile().delete()){
             forDelete.getParent().removeChild(forDelete);
         }else {
@@ -246,6 +274,10 @@ public class LocalStorage extends Storage{
 
         if(fileToRename.getFile().renameTo(fileWithNewName)){
             MyFile novajlija = new MyFile(fileWithNewName.getName(),parent,fileWithNewName,fileWithNewName.isDirectory());
+            if (fileToRename.isHasLimits()){
+                novajlija.setHasLimits(true);
+                novajlija.setLimit(fileToRename.getLimit());
+            }
             praviDecu(novajlija);
             return true;
         }else {
@@ -260,36 +292,96 @@ public class LocalStorage extends Storage{
         MyFile currentDirectory = pathToMyFile(location);       //mesto gde stavljamo novi fajl
         MyFile fileToMove = pathToMyFile(fileToMovePath);       //fajl koji premestamo
 
-        fileToMove.getParent().removeChild(fileToMove);
-//        fileToMove.setParent(currentDirectory);
+        if(currentDirectory.isHasLimits()){
+            if (currentDirectory.checkLimits()){
+                fileToMove.getParent().removeChild(fileToMove);
 
-        if(fileToMove.isDirectory()){
-            try {
-                FileUtils.moveDirectoryToDirectory(fileToMove.getFile(),currentDirectory.getFile(),false);
-                File changingFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),fileToMove.getName())));
-                MyFile novi = new MyFile(changingFile.getName(),currentDirectory,changingFile,true);
-                praviDecu(novi);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+                if(fileToMove.isDirectory()){
+                    try {
+                        FileUtils.moveDirectoryToDirectory(fileToMove.getFile(),currentDirectory.getFile(),false);
+                        File changingFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),fileToMove.getName())));
+                        MyFile novi = new MyFile(changingFile.getName(),currentDirectory,changingFile,true);
+                        if (fileToMove.isHasLimits()){
+                            novi.setHasLimits(true);
+                            novi.setLimit(fileToMove.getLimit());
+                        }
+                        praviDecu(novi);
+                    } catch (IOException e) {
+                        errorMessage("moveFile");
+                    }
+                }else {
+                    try {
+                        FileUtils.moveFileToDirectory(fileToMove.getFile(),currentDirectory.getFile(),false);
+                        File changingFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),fileToMove.getName())));
+                        MyFile novi = new MyFile(changingFile.getName(),currentDirectory,changingFile,false);
+                    } catch (IOException e) {
+                        errorMessage("moveFile");
+                    }
+                }
+            }else {
+                errorMessage("moveFile_OverLimits");
+                return;
             }
         }else {
-            try {
-                FileUtils.moveFileToDirectory(fileToMove.getFile(),currentDirectory.getFile(),false);
-                File changingFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),fileToMove.getName())));
-                MyFile novi = new MyFile(changingFile.getName(),currentDirectory,changingFile,false);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            fileToMove.getParent().removeChild(fileToMove);
+
+            if(fileToMove.isDirectory()){
+                try {
+                    FileUtils.moveDirectoryToDirectory(fileToMove.getFile(),currentDirectory.getFile(),false);
+                    File changingFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),fileToMove.getName())));
+                    MyFile novi = new MyFile(changingFile.getName(),currentDirectory,changingFile,true);
+                    if (fileToMove.isHasLimits()){
+                        novi.setHasLimits(true);
+                        novi.setLimit(fileToMove.getLimit());
+                    }
+                    praviDecu(novi);
+                } catch (IOException e) {
+                    errorMessage("moveFile");
+                }
+            }else {
+                try {
+                    FileUtils.moveFileToDirectory(fileToMove.getFile(),currentDirectory.getFile(),false);
+                    File changingFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),fileToMove.getName())));
+                    MyFile novi = new MyFile(changingFile.getName(),currentDirectory,changingFile,false);
+                } catch (IOException e) {
+                    errorMessage("moveFile");
+                }
             }
         }
+
     }
 
     @Override
-    public boolean moveInside(String where, String fileType,Path... paths) {
+    public boolean moveInside(String where, String fileType,Path paths) {
         MyFile currentDirectory = pathToMyFile(where);
+        File toPutin = new File(String.valueOf(paths));          //fajl koji treba ubaciti
 
-        for (Path putanja : paths){
-            File toPutin = new File(String.valueOf(putanja));          //fajl koji treba ubaciti
+        if (currentDirectory.isHasLimits()){
+            if(currentDirectory.checkLimits()){
+                if(toPutin.isDirectory()){
+                    try {
+                        FileUtils.moveDirectoryToDirectory(toPutin,currentDirectory.getFile(), true);
+                        File newPointerForFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),toPutin.getName())));
+                        MyFile myFile = new MyFile(newPointerForFile.getName(),currentDirectory,newPointerForFile,true);
+                        praviDecu(myFile);
+                    } catch (IOException e) {
+                        errorMessage("moveInside");
+                    }
+                }else {
+                    try {
+                        FileUtils.moveFileToDirectory(toPutin,currentDirectory.getFile(), true);
+                        File newPointerForFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),toPutin.getName())));
+                        MyFile myFile = new MyFile(newPointerForFile.getName(),currentDirectory,newPointerForFile,false);
+                    } catch (IOException e) {
+                        errorMessage("moveInside");
+                    }
+                }
+            }else {
+                errorMessage("moveInside_OverLimits");
+                return false;
+            }
 
+        }else {
             if(toPutin.isDirectory()){
                 try {
                     FileUtils.moveDirectoryToDirectory(toPutin,currentDirectory.getFile(), true);
@@ -297,7 +389,7 @@ public class LocalStorage extends Storage{
                     MyFile myFile = new MyFile(newPointerForFile.getName(),currentDirectory,newPointerForFile,true);
                     praviDecu(myFile);
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    errorMessage("moveInside");
                 }
             }else {
                 try {
@@ -305,11 +397,10 @@ public class LocalStorage extends Storage{
                     File newPointerForFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),toPutin.getName())));
                     MyFile myFile = new MyFile(newPointerForFile.getName(),currentDirectory,newPointerForFile,false);
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    errorMessage("moveInside");
                 }
             }
         }
-
         return false;
     }
 
@@ -353,12 +444,9 @@ public class LocalStorage extends Storage{
                         BasicFileAttributes attributes = Files.readAttributes(Paths.get(myFile.getFile().getPath()),BasicFileAttributes.class);
                         System.out.println(myFile.getName().toUpperCase());
                         System.out.println("creationTime: " + attributes.creationTime());
-                        System.out.println("lastAccessTime: " + attributes.lastAccessTime());
                         System.out.println("lastModifiedTime: " + attributes.lastModifiedTime());
                         System.out.println("isDirectory: " + attributes.isDirectory());
-                        System.out.println("isOther: " + attributes.isOther());
                         System.out.println("isRegularFile: " + attributes.isRegularFile());
-                        System.out.println("isSymbolicLink: " + attributes.isSymbolicLink());
                         System.out.println("size: " + attributes.size());
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -469,7 +557,7 @@ public class LocalStorage extends Storage{
 
     //obezbediti zadavanje različitih kriterijuma sortiranja, na primer po nazivu,
     //datumu kreiranje ili modifikacije, rastuće ili opadajuće,
-    @Override // treba dodati opadajuci niz
+    @Override
     public List<FileJM> sortDirectory(List<FileJM> fileJMList, Sort sort, Sort ascdes) {
         int count = 0;
         File[] files = new File[fileJMList.size()];
@@ -495,17 +583,17 @@ public class LocalStorage extends Storage{
             }
         }else if(ascdes.equals(Sort.DSC)){
             if(sort.equals(Sort.SIZE)){
-                Arrays.sort(files,SIZE_COMPARATOR);
+                Arrays.sort(files,SIZE_REVERSE);
                 displayFileOrder(files, true);
             }
 
             else if(sort.equals(Sort.DATE_MODIFIED)){
-                Arrays.sort(files,LASTMODIFIED_COMPARATOR);
+                Arrays.sort(files,LASTMODIFIED_REVERSE);
                 displayFileOrder(files, true);
             }
 
             else if(sort.equals(Sort.NAME)){
-                Arrays.sort(files,NAME_COMPARATOR);
+                Arrays.sort(files,NAME_REVERSE);
                 displayFileOrder(files, true);
             }
         }
