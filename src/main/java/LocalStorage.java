@@ -128,7 +128,6 @@ public class LocalStorage extends Storage{
             errorMessage("startStorage");
     }
 
-    //TODO
     @Override
     public void startStorage(String path, String name, long size, String... forbidenExtensions){
         File root = new File(String.valueOf(Paths.get(path)),name);        //pravimo folder
@@ -166,23 +165,24 @@ public class LocalStorage extends Storage{
     }
 
     @Override
-    public boolean createDir(String path, String names) {
+    public boolean createDir(String path, String... names) {
         MyFile currentDirectory = pathToMyFile(path);
+        String name = names[0];
 
         if (currentDirectory.isHasLimits()){
             if(currentDirectory.checkLimits()){
-                if(names.contains(".")){
+                if(name.contains(".")){
                     try {
                         File newFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),names)));
                         FileUtils.touch(newFile);
-                        MyFile myFile = new MyFile(names,currentDirectory,newFile,false);
+                        MyFile myFile = new MyFile(name,currentDirectory,newFile,false);
                     } catch (IOException e) {
                         errorMessage("createDir");
                     }
                 }else {
                     File newDirectory = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(), names)));
                     if (newDirectory.mkdir()) {
-                        MyFile myFile = new MyFile(names, currentDirectory,  newDirectory, true);
+                        MyFile myFile = new MyFile(name, currentDirectory,  newDirectory, true);
                     } else {
                         errorMessage("createDir");
                     }
@@ -192,18 +192,18 @@ public class LocalStorage extends Storage{
                 return false;
             }
         }else {
-            if(names.contains(".")){
+            if(name.contains(".")){
                 try {
                     File newFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),names)));
                     FileUtils.touch(newFile);
-                    MyFile myFile = new MyFile(names,currentDirectory,newFile,false);
+                    MyFile myFile = new MyFile(name,currentDirectory,newFile,false);
                 } catch (IOException e) {
                     errorMessage("createDir");
                 }
             }else {
                 File newDirectory = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(), names)));
                 if (newDirectory.mkdir()) {
-                    MyFile myFile = new MyFile(names, currentDirectory,  newDirectory, true);
+                    MyFile myFile = new MyFile(name, currentDirectory,  newDirectory, true);
                 } else {
                     errorMessage("createDir");
                 }
@@ -352,9 +352,10 @@ public class LocalStorage extends Storage{
     }
 
     @Override
-    public boolean moveInside(String where, String fileType,Path paths) {
+    public boolean moveInside(String where, String fileType,Path... paths) {
         MyFile currentDirectory = pathToMyFile(where);
-        File toPutin = new File(String.valueOf(paths));          //fajl koji treba ubaciti
+        Path path = paths[0];
+        File toPutin = new File(String.valueOf(path));          //fajl koji treba ubaciti
 
         if (currentDirectory.isHasLimits()){
             if(currentDirectory.checkLimits()){
@@ -471,7 +472,7 @@ public class LocalStorage extends Storage{
         }else {
             errorMessage("getFilesJM_WrongDirectory");
         }
-        return null;
+        return this.filesJM;
     }
 
     //treba da vrati fajlove i iz zadatog direktorijuma
@@ -485,21 +486,21 @@ public class LocalStorage extends Storage{
         }else {
             errorMessage("getFiles_WrongDirectory");
         }
-        return null;
+        return this.filesJM;
     }
 
     @Override   //najbolje bi bilo da se ukuca sa tackom .exe .txt
     public List<FileJM> getFilesByExtension(String extension) {
         filesJM.removeAll(filesJM);
         fileSearch(storageRoot,extension,"getFilesByExtension");
-        return null;
+        return this.filesJM;
     }
 
     @Override
     public List<FileJM> getFilesBySubstring(String substring) {
         filesJM.removeAll(filesJM);
         fileSearch(storageRoot,substring,"getFilesBySubstring");
-        return null;
+        return this.filesJM;
     }
 
     @Override
@@ -532,7 +533,6 @@ public class LocalStorage extends Storage{
 
     @Override
     public List<String> locateFile(String fileToFind) {
-        filesJM.removeAll(filesJM);
         fileSearch(storageRoot,fileToFind,"locateFile");
         return null;
     }
@@ -597,8 +597,6 @@ public class LocalStorage extends Storage{
                 displayFileOrder(files, true);
             }
         }
-
-
         return null;
     }
 
@@ -635,7 +633,6 @@ public class LocalStorage extends Storage{
 
                 if (fileModificationTime.compareTo(dateFrom) >= 0 && fileModificationTime.compareTo(dateTo) <= 0){
                     System.out.println(fileKid.getName());
-                    //String name, String path, String creationTime, String modificationTime, Integer size, boolean isDirectory
                     FileJM fileJM = new FileJM(fileKid.getName(),fileKid.getFile().getPath());
                     listToReturn.add(fileJM);
                 }
