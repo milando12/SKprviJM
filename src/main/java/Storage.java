@@ -38,7 +38,7 @@ public abstract class Storage implements Serializable {
      * @return returns true if it was successful
      */
     //kreiranje direktorijuma na određenoj putanji u skladištu
-    public abstract boolean createDir(String path, String... name);
+    public abstract boolean createDir(String path, String name);
 
     /**
      * Creating given number of directories
@@ -58,7 +58,7 @@ public abstract class Storage implements Serializable {
      * @return returns true if it was successful
      */
     //kreiranje direktorijuma sa organicenjima
-    public abstract boolean createDir(String path, String name, Integer fileLimit);
+    public abstract boolean createDirLim(String path, String name, Integer fileLimit);
 
     /**
      * Deleting file od directory
@@ -91,7 +91,7 @@ public abstract class Storage implements Serializable {
      * @return
      */
     //iz spoljasnjeg dela u Storage
-    public abstract boolean moveInside(String where, String fileType, Path... paths);
+    public abstract boolean moveInside(String where, String fileType, Path paths);
 
     /**
      * Downloading a file or directory from storage.

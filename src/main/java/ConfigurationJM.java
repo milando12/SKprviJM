@@ -2,7 +2,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class Configuration {
+public class ConfigurationJM {
     private List<String> extensions;
 
     private Long maxSize;
@@ -11,13 +11,13 @@ public class Configuration {
     private Map<String, Integer> maxFileLimits;
     private Map<String, Integer> currFileLimits;
 
-    public Configuration(){
+    public ConfigurationJM(){
         this.maxFileLimits= new HashMap<>();
         this.currFileLimits= new HashMap<>();
         this.currSize= Long.valueOf(0);
     }
 
-    public Configuration(List<String> extensions, Long maxSize) {
+    public ConfigurationJM(List<String> extensions, Long maxSize) {
         this.maxFileLimits= new HashMap<>();
         this.currFileLimits= new HashMap<>();
         this.extensions = extensions;
@@ -26,7 +26,7 @@ public class Configuration {
 
     }
 
-    public Configuration(List<String> extensions, Long maxSize, Map<String, Integer> maxFileLimits) {
+    public ConfigurationJM(List<String> extensions, Long maxSize, Map<String, Integer> maxFileLimits) {
         this.maxFileLimits= new HashMap<>();
         this.currFileLimits= new HashMap<>();
         this.extensions = extensions;
