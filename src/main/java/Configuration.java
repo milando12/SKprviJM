@@ -12,19 +12,27 @@ public class Configuration {
     private Map<String, Integer> currFileLimits;
 
     public Configuration(){
+        this.maxFileLimits= new HashMap<>();
+        this.currFileLimits= new HashMap<>();
+        this.currSize= Long.valueOf(0);
+    }
+
+    public Configuration(List<String> extensions, Long maxSize) {
+        this.maxFileLimits= new HashMap<>();
+        this.currFileLimits= new HashMap<>();
+        this.extensions = extensions;
+        this.maxSize = maxSize;
         this.currSize= Long.valueOf(0);
 
     }
 
-    public Configuration(List<String> extensions, Long maxSize) {
-        this.extensions = extensions;
-        this.maxSize = maxSize;
-    }
-
     public Configuration(List<String> extensions, Long maxSize, Map<String, Integer> maxFileLimits) {
+        this.maxFileLimits= new HashMap<>();
+        this.currFileLimits= new HashMap<>();
         this.extensions = extensions;
         this.maxSize = maxSize;
-        this.maxFileLimits = maxFileLimits;
+        this.currSize= Long.valueOf(0);
+
     }
 
     public boolean canAddFile( Long fileSize, String fileExtension, String parentDirectory){
@@ -42,7 +50,7 @@ public class Configuration {
 
     public boolean canAddDirectory(String parentDirectory){
         if (!maxFileLimits.containsKey(parentDirectory)) return true;
-        if (currFileLimits.get(parentDirectory)+1> maxFileLimits.get(parentDirectory)) return false;
+        else if (currFileLimits.get(parentDirectory)+1> maxFileLimits.get(parentDirectory)) return false;
 
         return true;
     }
@@ -51,6 +59,7 @@ public class Configuration {
         if (maxFileLimits== null) maxFileLimits= new HashMap<>();
 
         maxFileLimits.put(path,limit);
+        currFileLimits.put(path,0);
     }
 
     public void incCurrFileLimit(String parentPath){
