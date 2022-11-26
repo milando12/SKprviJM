@@ -7,28 +7,23 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
+import static org.apache.commons.io.comparator.LastModifiedFileComparator.LASTMODIFIED_COMPARATOR;
+import static org.apache.commons.io.comparator.NameFileComparator.NAME_COMPARATOR;
+import static org.apache.commons.io.comparator.SizeFileComparator.SIZE_COMPARATOR;
+
 public class LocalStorage extends Storage{
 
     private MyFile storageRoot;
-    private boolean forGit = true;
+    private List<FileJM> filesJM;
 
-    /**
-     * Ispisivanje poruke za gresku
-     */
     private void errorMessage(String function){
-        System.err.println("Lose zadata putanja " + function);
-    }
-
-    /**
-     * Proverava da li se misli na storageRoot
-     */
-    private boolean isPathForRoot(int lenght, String name){
-        return lenght == 1 && name.equals(storageRoot.getName());
+        System.err.println("Greska u: " + function);
     }
 
     /**
@@ -36,14 +31,14 @@ public class LocalStorage extends Storage{
      */
     private MyFile pathToMyFile(String path){
         String pool[] = path.split(":");
-        if(isPathForRoot(pool.length, pool[0])){
+        if(pool.length == 1 && pool[0].equals(storageRoot.getName())){
             return storageRoot;
         }
 
-        if(!(pool[0].equals(storageRoot.getName()))){   //ako nije dobro imenovan root
-            errorMessage("pathToMyFile");
-            return null;
-        }
+//        if(!(pool[0].equals(storageRoot.getName()))){   //ako nije dobro imenovan root
+//            errorMessage("pathToMyFile");
+//            return null;
+//        }
 
         MyFile pointer = storageRoot;
         for (int i = 1; i < pool.length; i++){
@@ -51,7 +46,7 @@ public class LocalStorage extends Storage{
                 pointer = pointer.findChildByName(pool[i]);
             }else {
                 errorMessage("pathToMyFile");
-                return null;
+//                return null;
             }
         }
         return pointer;
@@ -70,58 +65,64 @@ public class LocalStorage extends Storage{
                 fileSearch(directory.getChildrenList().get(i),checker,function);        //ako je direktorijum ulazimo u njega
             }else {
                 if (function.equalsIgnoreCase("getFilesJM") || function.equalsIgnoreCase("getFiles")) {
-                    System.out.println(directory.getChildrenList().get(i).getName().toUpperCase());
-                    break;
+                    FileJM fileJM = new FileJM(directory.getChildrenList().get(i).getName(),directory.getChildrenList().get(i).getFile().getPath());
+                    filesJM.add(fileJM);
+                    System.out.println(directory.getChildrenList().get(i).getName());
+                    continue;
                 }
                 if (function.equalsIgnoreCase("getFilesByExtension") && directory.getChildrenList().get(i).getName().endsWith(checker)) {
-                    System.out.println(directory.getChildrenList().get(i).getName().toUpperCase());
-                    break;
+                    FileJM fileJM = new FileJM(directory.getChildrenList().get(i).getName(),directory.getChildrenList().get(i).getFile().getPath());
+                    filesJM.add(fileJM);
+                    System.out.println(directory.getChildrenList().get(i).getName());
+                    continue;
                 }
                 if (function.equalsIgnoreCase("getFilesBySubstring") && directory.getChildrenList().get(i).getName().contains(checker)) {
-                    System.out.println(directory.getChildrenList().get(i).getName().toUpperCase());
-                    break;
+                    FileJM fileJM = new FileJM(directory.getChildrenList().get(i).getName(),directory.getChildrenList().get(i).getFile().getPath());
+                    filesJM.add(fileJM);
+                    System.out.println(directory.getChildrenList().get(i).getName());
+                    continue;
                 }
                 if(function.equalsIgnoreCase("locateFile") && directory.getChildrenList().get(i).getName().contains(checker)){
-                    System.out.println(checker + " is located in " + directory.getName().toUpperCase());
+                    System.out.println(checker + " is located in " + directory.getName());
                     return;
                 }
             }
         }
     }
 
-    /**
-     * Izlistava direktorijum na zadatoj putanji
-     */
-    public void listDirectory(String path){
-        MyFile toList = pathToMyFile(path);
-        if(toList.isDirectory()){
-            if(toList.getChildrenList().isEmpty()){
-                System.out.println(toList.getName() + " is Empty");
-                return;
+    private static void praviDecu(MyFile roditelj){
+        File[] files = roditelj.getFile().listFiles();
+        for (File listaj : files){
+            if(listaj.isDirectory()){
+                MyFile novi = new MyFile(listaj.getName(),roditelj,listaj,true);
+                praviDecu(novi);
+            }else {
+                MyFile novi = new MyFile(listaj.getName(),roditelj,listaj,false);
             }
-            System.out.println("Izlistavanje direktorijuma " + toList.getName());
-            for (MyFile child : toList.getChildrenList()){
-                System.out.println(child.getName());
-            }
-        }else {
-            errorMessage("listDirectory");
         }
     }
+
+    public void listDir(String path){
+        MyFile toList = pathToMyFile(path);
+
+        for (MyFile mf : toList.getChildrenList() ){
+            System.out.println(mf.getName());
+        }
+
+    }
+
 
     @Override
     public void startStorage(String path) {
         File root = new File(String.valueOf(Paths.get(path)));
 
         if (root.exists()){
-            try {
-                FileUtils.cleanDirectory(root);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
             this.storageRoot = new MyFile(root.getName(),null,root,true);
+            this.filesJM = new ArrayList<>();
+            praviDecu(storageRoot);
             System.out.println("SysInfo: Direktorijum " + storageRoot.getName() + " je uspesno preuzet");
         }else {
-            errorMessage("takeOverStorage");
+            errorMessage("takeStorage");
         }
     }
 
@@ -131,6 +132,7 @@ public class LocalStorage extends Storage{
 
         if(root.mkdir()){
             this.storageRoot = new MyFile(name,null,root,true);     //odmah pravimo objekat nase klase
+            this.filesJM = new ArrayList<>();
             System.out.println("SysInfo: Direktorijum " + storageRoot.getName() + " je uspesno kreiran");
         }else
             errorMessage("startStorage");
@@ -139,7 +141,7 @@ public class LocalStorage extends Storage{
     //TODO
     @Override
     public void startStorage(String path, String name, long size, String... forbidenExtensions){
-
+        this.filesJM = new ArrayList<>();
     }
 
     @Override
@@ -156,7 +158,7 @@ public class LocalStorage extends Storage{
                     throw new RuntimeException(e);
                 }
             }else {
-                File newDirectory = new File(currentDirectory.getFile(), newOne);
+                File newDirectory = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(), newOne)));
                 if (newDirectory.mkdir()) {
                     MyFile myFile = new MyFile(newOne, currentDirectory,  newDirectory, true);
                 } else {
@@ -168,46 +170,55 @@ public class LocalStorage extends Storage{
     }
 
     @Override
-    public boolean createDir(String path, String universalName, int i) {
-        MyFile currentDirectory = pathToMyFile(path);
-
-        if(universalName.contains(".")){
-            for(int count = 1; count <= i; count++){
-                try {
-                    String name = universalName.concat(String.valueOf(count));
-                    File newFile = new File(currentDirectory.getFile(),name);
-                    FileUtils.touch(newFile);
-                    if (newFile.mkdir()){
-                        MyFile myFile = new MyFile(name,currentDirectory,newFile,false);
-                    }else {
-                        errorMessage("createDir");
-                        return false;
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-
-        }else {
-            for(int count = 1; count <= i; count++){
-                try {
-                    String name = universalName.concat(String.valueOf(count));
-                    File newDirectory = new File(currentDirectory.getFile(),name);
-                    FileUtils.touch(newDirectory);
-                    if (newDirectory.mkdir()) {
-                        MyFile myFile = new MyFile(name,currentDirectory,newDirectory,true);
-                        return true;
-                    } else {
-                        errorMessage("createDirs");
-                        return false;
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
+    public boolean createDir(String path, String universalName, int i){
+        for (int j = 1; j <=i; j++) {
+            createDir(path, universalName.concat(String.valueOf(j)));
         }
-        return false;
+        return true;
     }
+
+//    @Override
+//    public boolean createDir(String path, String universalName, int i) {
+//        MyFile currentDirectory = pathToMyFile(path);
+//
+//        if(universalName.contains(".")){
+//            for(int count = 1; count <= i; count++){
+//                try {
+//                    String name = universalName.concat(String.valueOf(count));
+//                    File newFile = new File(currentDirectory.getFile(),name);
+//                    FileUtils.touch(newFile);
+//                    if (newFile.mkdir()){
+//                        MyFile myFile = new MyFile(name,currentDirectory,newFile,false);
+//                    }else {
+//                        errorMessage("createDirs");
+//                        return false;
+//                    }
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//
+//        }else {
+//            for(int count = 1; count <= i; count++){
+//                try {
+//                    String name = universalName.concat(String.valueOf(count));
+//
+//                    File newDirectory = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),name)));
+//                    FileUtils.touch(newDirectory);
+//                    if (newDirectory.mkdir()) {
+//                        MyFile myFile = new MyFile(name,currentDirectory,newDirectory,true);
+//                        return true;
+//                    } else {
+//                        errorMessage("createDirs");
+//                        return false;
+//                    }
+//                } catch (IOException e) {
+//                    throw new RuntimeException(e);
+//                }
+//            }
+//        }
+//        return false;
+//    }
 
     @Override
     public boolean createDir(String path, String name, Integer fileLimit){
@@ -230,8 +241,12 @@ public class LocalStorage extends Storage{
         MyFile fileToRename = pathToMyFile(oldNamePath);        //fajl koji menja ime
         File fileWithNewName = new File(String.valueOf(Paths.get(fileToRename.getParent().getFile().getPath(),newName)));
 
+        MyFile parent = fileToRename.getParent();
+        parent.removeChild(fileToRename);
+
         if(fileToRename.getFile().renameTo(fileWithNewName)){
-            fileToRename.setFile(fileWithNewName);
+            MyFile novajlija = new MyFile(fileWithNewName.getName(),parent,fileWithNewName,fileWithNewName.isDirectory());
+            praviDecu(novajlija);
             return true;
         }else {
             errorMessage("renameFile");
@@ -246,13 +261,14 @@ public class LocalStorage extends Storage{
         MyFile fileToMove = pathToMyFile(fileToMovePath);       //fajl koji premestamo
 
         fileToMove.getParent().removeChild(fileToMove);
-        fileToMove.setParent(currentDirectory);
+//        fileToMove.setParent(currentDirectory);
 
         if(fileToMove.isDirectory()){
             try {
                 FileUtils.moveDirectoryToDirectory(fileToMove.getFile(),currentDirectory.getFile(),false);
                 File changingFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),fileToMove.getName())));
-                fileToMove.setFile(changingFile);
+                MyFile novi = new MyFile(changingFile.getName(),currentDirectory,changingFile,true);
+                praviDecu(novi);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -260,7 +276,7 @@ public class LocalStorage extends Storage{
             try {
                 FileUtils.moveFileToDirectory(fileToMove.getFile(),currentDirectory.getFile(),false);
                 File changingFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),fileToMove.getName())));
-                fileToMove.setFile(changingFile);
+                MyFile novi = new MyFile(changingFile.getName(),currentDirectory,changingFile,false);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -279,6 +295,7 @@ public class LocalStorage extends Storage{
                     FileUtils.moveDirectoryToDirectory(toPutin,currentDirectory.getFile(), true);
                     File newPointerForFile = new File(String.valueOf(Paths.get(currentDirectory.getFile().getPath(),toPutin.getName())));
                     MyFile myFile = new MyFile(newPointerForFile.getName(),currentDirectory,newPointerForFile,true);
+                    praviDecu(myFile);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -304,6 +321,7 @@ public class LocalStorage extends Storage{
         }
 
         MyFile fileToGoOut = pathToMyFile(sourcePath);
+        fileToGoOut.getParent().removeChild(fileToGoOut);
         File location = new File(String.valueOf(Paths.get(String.valueOf(destinationPath))));
 
         if(fileToGoOut.isDirectory()){
@@ -356,6 +374,7 @@ public class LocalStorage extends Storage{
     @Override
     public List<FileJM> getFilesFromAllSubdirectories(String putanja) {
         MyFile pointerMyFile = pathToMyFile(putanja);
+        filesJM.removeAll(filesJM);
 
         if(pointerMyFile.isDirectory()){
             for (MyFile childToList : pointerMyFile.getChildrenList()){
@@ -367,27 +386,30 @@ public class LocalStorage extends Storage{
         return null;
     }
 
-    //treba da vrati fajlove i iz zadatog direktorijuma  easy:)
+    //treba da vrati fajlove i iz zadatog direktorijuma
     @Override
     public List<FileJM> getAllFilesFromDirectory(String putanja) {
         MyFile pointerMyFile = pathToMyFile(putanja);
+        filesJM.removeAll(filesJM);
 
         if (pointerMyFile.isDirectory()){
             fileSearch(pointerMyFile,null,"getFiles");
         }else {
-            errorMessage("getFiles");
+            errorMessage("getFiles_WrongDirectory");
         }
         return null;
     }
 
     @Override   //najbolje bi bilo da se ukuca sa tackom .exe .txt
     public List<FileJM> getFilesByExtension(String extension) {
+        filesJM.removeAll(filesJM);
         fileSearch(storageRoot,extension,"getFilesByExtension");
         return null;
     }
 
     @Override
     public List<FileJM> getFilesBySubstring(String substring) {
+        filesJM.removeAll(filesJM);
         fileSearch(storageRoot,substring,"getFilesBySubstring");
         return null;
     }
@@ -422,16 +444,74 @@ public class LocalStorage extends Storage{
 
     @Override
     public List<String> locateFile(String fileToFind) {
+        filesJM.removeAll(filesJM);
         fileSearch(storageRoot,fileToFind,"locateFile");
         return null;
     }
 
+
+    private static void displayFileOrder(File[] files, boolean displayDirectory) {
+
+        for (File file : files) {
+            if (!file.isDirectory()) {
+                System.out.printf("%-25s - %s%n", file.getName(),
+                        FileUtils.byteCountToDisplaySize(file.length()));
+            } else if (displayDirectory) {
+                long size = FileUtils.sizeOfDirectory(file);
+                String friendlySize = FileUtils.byteCountToDisplaySize(size);
+                System.out.printf("%-25s - %s%n", file.getName(),
+                        friendlySize);
+            }
+        }
+
+        System.out.println("------------------------------------");
+    }
+
     //obezbediti zadavanje različitih kriterijuma sortiranja, na primer po nazivu,
     //datumu kreiranje ili modifikacije, rastuće ili opadajuće,
-    //TODO
-    @Override
-    public void sortDirectory(String path, Sort sort, String s1) {
-        MyFile pointerMyFile = pathToMyFile(path);
+    @Override // treba dodati opadajuci niz
+    public List<FileJM> sortDirectory(List<FileJM> fileJMList, Sort sort, Sort ascdes) {
+        int count = 0;
+        File[] files = new File[fileJMList.size()];
+        for (FileJM jmfile : fileJMList){
+            File file = new File(jmfile.getPath());
+            files[count++] = file;
+        }
+
+        if (ascdes.equals(Sort.ASC)){
+            if(sort.equals(Sort.SIZE)){
+                Arrays.sort(files,SIZE_COMPARATOR);
+                displayFileOrder(files, true);
+            }
+
+            else if(sort.equals(Sort.DATE_MODIFIED)){
+                Arrays.sort(files,LASTMODIFIED_COMPARATOR);
+                displayFileOrder(files, true);
+            }
+
+            else if(sort.equals(Sort.NAME)){
+                Arrays.sort(files,NAME_COMPARATOR);
+                displayFileOrder(files, true);
+            }
+        }else if(ascdes.equals(Sort.DSC)){
+            if(sort.equals(Sort.SIZE)){
+                Arrays.sort(files,SIZE_COMPARATOR);
+                displayFileOrder(files, true);
+            }
+
+            else if(sort.equals(Sort.DATE_MODIFIED)){
+                Arrays.sort(files,LASTMODIFIED_COMPARATOR);
+                displayFileOrder(files, true);
+            }
+
+            else if(sort.equals(Sort.NAME)){
+                Arrays.sort(files,NAME_COMPARATOR);
+                displayFileOrder(files, true);
+            }
+        }
+
+
+        return null;
     }
 
     //treba da vrati fajlove iz direktorijuma za neki period
@@ -460,17 +540,16 @@ public class LocalStorage extends Storage{
 
                 if(fileCreationTime.compareTo(dateFrom) >= 0 && fileCreationTime.compareTo(dateTo) <= 0){
                     System.out.println(fileKid.getName());
-                    //String name, String path, String creationTime, String modificationTime, Integer size, boolean isDirectory
-                    FileJM file = new FileJM(fileKid.getName(),fileKid.getFile().getPath(),null,null,0,fileKid.isDirectory());
-                    listToReturn.add(file);
+                    FileJM fileJM = new FileJM(fileKid.getName(),fileKid.getFile().getPath());
+                    listToReturn.add(fileJM);
                     continue;
                 }
 
                 if (fileModificationTime.compareTo(dateFrom) >= 0 && fileModificationTime.compareTo(dateTo) <= 0){
                     System.out.println(fileKid.getName());
                     //String name, String path, String creationTime, String modificationTime, Integer size, boolean isDirectory
-                    FileJM file = new FileJM(fileKid.getName(),fileKid.getFile().getPath(),null,null,0,fileKid.isDirectory());
-                    listToReturn.add(file);
+                    FileJM fileJM = new FileJM(fileKid.getName(),fileKid.getFile().getPath());
+                    listToReturn.add(fileJM);
                 }
 
             } catch (IOException e) {

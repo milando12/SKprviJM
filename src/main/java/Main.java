@@ -4,9 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.Scanner;
+import java.util.*;
 
 import static org.apache.commons.io.comparator.LastModifiedFileComparator.LASTMODIFIED_COMPARATOR;
 import static org.apache.commons.io.comparator.NameFileComparator.NAME_COMPARATOR;
@@ -15,7 +13,10 @@ import static org.apache.commons.io.comparator.SizeFileComparator.SIZE_COMPARATO
 
 public class Main {
 
+
+
     private static void displayFileOrder(File[] files, boolean displayDirectory) {
+
         for (File file : files) {
             if (!file.isDirectory()) {
                 System.out.printf("%-25s - %s%n", file.getName(),
@@ -27,31 +28,39 @@ public class Main {
                         friendlySize);
             }
         }
+
         System.out.println("------------------------------------");
     }
 
+
+
+
     public static void main(String[] args) throws IOException, ParseException {
-        Scanner scanner = new Scanner(System.in);
-
-        String path = scanner.nextLine();
-
-        File file = new File(String.valueOf(Paths.get(path)));
-        System.out.println(file.getParent());
-
-        FileUtils.sizeOf(file);
-        System.out.println(FileUtils.sizeOf(file)); //BYtes
-        System.out.println(FileUtils.sizeOf(file)/1024);    //KB
-        System.out.println(FileUtils.sizeOf(file)/1048576); //MB
 
 
-        File[] files = file.listFiles();
-        System.out.println("Ascending order.");
-        //Arrays.sort(files, SIZE_COMPARATOR);
-        //Arrays.sort(files, NAME_COMPARATOR);
-        //Arrays.sort(files, PATH_COMPARATOR);
-        //Arrays.sort(files, LASTMODIFIED_COMPARATOR);
-        displayFileOrder(files, true);
 
+
+
+//        Scanner scanner = new Scanner(System.in);
+//
+//        String path = scanner.nextLine();
+//
+//        File file = new File(String.valueOf(Paths.get(path)));
+//        System.out.println(file.getParent());
+//
+//        FileUtils.sizeOf(file);
+//        System.out.println(FileUtils.sizeOf(file)); //BYtes
+//        System.out.println(FileUtils.sizeOf(file)/1024);    //KB
+//        System.out.println(FileUtils.sizeOf(file)/1048576); //MB
+//
+//
+//        File[] files = file.listFiles();
+//        System.out.println("Ascending order.");
+//        //Arrays.sort(files, SIZE_COMPARATOR);
+//        //Arrays.sort(files, NAME_COMPARATOR);
+//        //Arrays.sort(files, PATH_COMPARATOR);
+//        //Arrays.sort(files, LASTMODIFIED_COMPARATOR);
+//        displayFileOrder(files, true);
     }
 
 
